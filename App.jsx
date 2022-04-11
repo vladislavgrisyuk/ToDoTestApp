@@ -1,15 +1,8 @@
-import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { FontAwesome } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import
 {
-	Button,
-	Modal,
-	RefreshControl,
-	SafeAreaView,
-	ScrollView,
-	StyleSheet,
 	Text,
-	TextInput,
 	TouchableOpacity,
 	View,
 } from 'react-native';
@@ -17,35 +10,27 @@ import
 
 import 
 {
-	Montserrat_100Thin,
-	Montserrat_100Thin_Italic,
-	Montserrat_200ExtraLight,
-	Montserrat_200ExtraLight_Italic,
-	Montserrat_300Light,
-	Montserrat_300Light_Italic,
 	Montserrat_400Regular,
-	Montserrat_400Regular_Italic,
 	Montserrat_500Medium,
-	Montserrat_500Medium_Italic,
-	Montserrat_600SemiBold,
-	Montserrat_600SemiBold_Italic,
-	Montserrat_700Bold,
-	Montserrat_700Bold_Italic,
-	Montserrat_800ExtraBold,
-	Montserrat_800ExtraBold_Italic,
-	Montserrat_900Black,
-	Montserrat_900Black_Italic,
 	useFonts
 } from '@expo-google-fonts/montserrat'
 
-import LoginForm from './LoginForm';
+
+import
+{
+	Exo2_400Regular,
+	Exo2_500Medium,
+	Exo2_600SemiBold,
+
+} from '@expo-google-fonts/exo-2'
 
 import 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { createDrawerNavigator } from '@react-navigation/drawer'
-import { styles } from './style'
 import Catalog from './screens/catalog';
+import { OpenDrawerRight } from './NavigationService'
+import ArticleAbout from './screens/articleAbout';
 
 export default function App()
 {
@@ -54,39 +39,67 @@ export default function App()
 	const Drawer = createDrawerNavigator()
 	let [fontsLoaded] = useFonts({
 		Montserrat_400Regular,
-		Montserrat_500Medium
+		Montserrat_500Medium,
+		Exo2_400Regular,
+		Exo2_500Medium,
+		Exo2_600SemiBold,
 	});
-	console.log('fonst: ' + fontsLoaded)
 
-	const Cat = () =>
+	const Cat = ({ route }) =>
 	{
-		return (<Text>asd</Text>)
+		return (<ArticleAbout />)
 	}
 
-	const Drawers = () =>
+	const MainDrawer = () =>
 	{
+
 		return (
-			<Drawer.Navigator screenOptions={ {
+			<Drawer.Navigator useLegacyImplementation screenOptions={ {
 				headerStyle: {
-					backgroundColor: 'rgb(226, 141, 50)',
+					backgroundColor: '#e48f13',
+					height: 100,
 
 				},
+				swipeEdgeWidth: 400,
 				headerTintColor: '#fff',
-				title: 'Каталог'
+				title: '',
+
+				headerRight: () =>
+				{
+					return (
+						<View style={ {
+							marginRight: 15,
+							display: 'flex',
+							flexDirection: 'row'
+						} }>
+							<TouchableOpacity style={ {
+								marginRight: 15
+							} }>
+								<Feather name="moon" size={ 22 } color="white" />
+							</TouchableOpacity>
+							<TouchableOpacity onPress={ OpenDrawerRight }>
+								<FontAwesome name="filter" size={ 22 } color="white" />
+							</TouchableOpacity>
+						</View>
+					)
+				}
+
 			} }>
+
 				<Drawer.Screen name='catalog' component={ Catalog }></Drawer.Screen>
 			</Drawer.Navigator>
 		)
 	}
-
 	return (
 		<NavigationContainer>
-			<Stack.Navigator screenOptions={ { headerShown: false } }>
-				<Stack.Screen name='Drawer' component={ Drawers }>
+			<Stack.Navigator screenOptions={ {
+				headerShown: false,
+			} }>
+				<Stack.Screen name='MainDrawer' component={ MainDrawer }>
 
 				</Stack.Screen>
-				<Stack.Group screenOptions={ { presentation: 'modal', headerShown: true } }>
-					<Stack.Screen name='catalog2' component={ Cat }>
+				<Stack.Group screenOptions={ { presentation: 'modal', headerShown: false, gestureEnabled: true, gestureResponseDistance: 300 } }>
+					<Stack.Screen options={ { headerShown: false } } name='catalog2' component={ Cat }>
 
 					</Stack.Screen>
 				</Stack.Group>
