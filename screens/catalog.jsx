@@ -2,13 +2,10 @@ import { View, Text, StyleSheet, Image, ImageBackground, RefreshControl, Touchab
 import React, { useMemo, useState } from 'react'
 
 
-import 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { createDrawerNavigator } from '@react-navigation/drawer'
 import { useNavigation } from '@react-navigation/native';
-
-import { FlatList, ScrollView } from 'react-native-gesture-handler'
 
 import ArticleList from '../components/catalog/ArticleList'
 import { OpenLeftDrawer } from '../NavigationService'

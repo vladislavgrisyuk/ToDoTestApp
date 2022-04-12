@@ -6,7 +6,7 @@ import
 	TouchableOpacity,
 	View,
 } from 'react-native';
-
+import { AntDesign } from '@expo/vector-icons';
 
 import 
 {
@@ -31,6 +31,7 @@ import { createDrawerNavigator } from '@react-navigation/drawer'
 import Catalog from './screens/catalog';
 import { OpenDrawerRight } from './NavigationService'
 import ArticleAbout from './screens/articleAbout';
+
 
 export default function App()
 {
@@ -98,7 +99,7 @@ export default function App()
 				<Stack.Screen name='MainDrawer' component={ MainDrawer }>
 
 				</Stack.Screen>
-				<Stack.Group screenOptions={ { presentation: 'modal', headerShown: false, gestureEnabled: true, gestureResponseDistance: 300 } }>
+				<Stack.Group screenOptions={ { presentation: 'card', headerShown: false, gestureEnabled: true, gestureResponseDistance: 800 } }>
 					<Stack.Screen options={ { headerShown: false } } name='catalog2' component={ Cat }>
 
 					</Stack.Screen>
