@@ -95,12 +95,16 @@ export default function App()
 		<NavigationContainer>
 			<Stack.Navigator screenOptions={ {
 				headerShown: false,
+
 			} }>
 				<Stack.Screen name='MainDrawer' component={ MainDrawer }>
 
 				</Stack.Screen>
 				<Stack.Group screenOptions={ { presentation: 'card', headerShown: false, gestureEnabled: true, gestureResponseDistance: 800 } }>
 					<Stack.Screen options={ { headerShown: false } } name='catalog2' component={ Cat }>
+
+					</Stack.Screen>
+					<Stack.Screen options={ { headerShown: false } } name='read' component={ Cat }>
 
 					</Stack.Screen>
 				</Stack.Group>
