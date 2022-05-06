@@ -2,15 +2,14 @@ const { useNavigation } = require('@react-navigation/core')
 const { View, ImageBackground, Text, StyleSheet } = require('react-native')
 const { TouchableHighlight } = require('react-native-gesture-handler')
 import { Dimensions } from 'react-native';
-
+import { globalVars } from '../../style';
 
 const Article = ({ data }) =>
 {
-
     const navigation = useNavigation()
     const articleOnPressHandler = () =>
     {
-        navigation.navigate('catalog2', { text: 'asd' })
+        navigation.navigate('catalog2', { text: 'asd', href: data.href })
     }
 
 
@@ -22,19 +21,20 @@ const Article = ({ data }) =>
                 style={ style.articleShadow }
                 onPress={ articleOnPressHandler }>
                 <ImageBackground
-                    resizeMode='contain'
+                    resizeMode='cover'
                     style={ style.articleBackgroundImage }
-                    source={ data.sourceImg }>
+                    source={ { uri: data.img } }>
                     <View
                         style={ style.articleData } >
                         <Text
-                            style={ style.articleTitle }>
+                            numberOfLines={ 2 }
+                            style={ style.articleDescription }>
                             { data.title }
                         </Text>
                         <Text
                             numberOfLines={ 2 }
-                            style={ style.articleDescription }>
-                            { data.description }
+                            style={ style.articleTitle }>
+                            { data.chaptersCount }
                         </Text>
                     </View>
                 </ImageBackground>
@@ -44,9 +44,8 @@ const Article = ({ data }) =>
     )
 }
 let columns = 3
-let width = Dimensions.get('screen').width
-let height2 = width / columns * 1.3
-console.log(100 / columns + '%')
+let width = globalVars.screenWidth
+let height2 = width / columns * 1.45
 
 
 const style = StyleSheet.create({
@@ -61,19 +60,19 @@ const style = StyleSheet.create({
     articleData: {
         display: 'flex',
         flexDirection: 'column',
-        height: 'auto',
         padding: 6,
         backgroundColor: 'rgba(0,0,0,0.5)'
     },
     articleTitle: {
-        fontSize: 13,
+        fontSize: 12,
         color: '#fff',
-        fontFamily: 'Montserrat_500Medium'
+        // fontFamily: 'Montserrat_500Medium'
     },
     articleDescription: {
         color: '#fff',
         fontWeight: 'bold',
-        fontFamily: 'Montserrat_400Regular'
+        fontSize: 13
+        // fontFamily: 'Montserrat_400Regular'
     },
     articleShadow: {
         borderRadius: 6,

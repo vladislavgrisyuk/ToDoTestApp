@@ -22,7 +22,7 @@ const ChapterItem = ({ item }) =>
         } }
             onPress={ () =>
             {
-                navigation.navigate('read')
+                navigation.navigate('read', { href: item.href })
             } }>
             <View style={ {
                 width: 40,

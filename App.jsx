@@ -10,8 +10,6 @@ import { AntDesign } from '@expo/vector-icons';
 
 import 
 {
-	Montserrat_400Regular,
-	Montserrat_500Medium,
 	useFonts
 } from '@expo-google-fonts/montserrat'
 
@@ -31,16 +29,22 @@ import { createDrawerNavigator } from '@react-navigation/drawer'
 import Catalog from './screens/catalog';
 import { OpenDrawerRight } from './NavigationService'
 import ArticleAbout from './screens/articleAbout';
+import Readerview from './screens/ReaderView';
+import ReaderView from './screens/ReaderView';
+import { LogBox } from 'react-native';
+import { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+LogBox.ignoreLogs(['Warning: ...']); // Ignore log notification by message
+LogBox.ignoreAllLogs();//Ignore all log notifications
 
 
 export default function App()
 {
+	console.reportErrorsAsExceptions = false;
+
 
 	const Stack = createStackNavigator()
 	const Drawer = createDrawerNavigator()
 	let [fontsLoaded] = useFonts({
-		Montserrat_400Regular,
-		Montserrat_500Medium,
 		Exo2_400Regular,
 		Exo2_500Medium,
 		Exo2_600SemiBold,
@@ -100,11 +104,11 @@ export default function App()
 				<Stack.Screen name='MainDrawer' component={ MainDrawer }>
 
 				</Stack.Screen>
-				<Stack.Group screenOptions={ { presentation: 'card', headerShown: false, gestureEnabled: true, gestureResponseDistance: 800 } }>
-					<Stack.Screen options={ { headerShown: false } } name='catalog2' component={ Cat }>
+				<Stack.Group screenOptions={ { presentation: 'card', headerShown: false, gestureEnabled: true, gestureResponseDistance: 70 } }>
+					<Stack.Screen options={ { headerShown: false, detachPreviousScreen: false } } name='catalog2' component={ ArticleAbout }>
 
 					</Stack.Screen>
-					<Stack.Screen options={ { headerShown: false } } name='read' component={ Cat }>
+					<Stack.Screen options={ { headerShown: false } } name='read' component={ ReaderView }>
 
 					</Stack.Screen>
 				</Stack.Group>

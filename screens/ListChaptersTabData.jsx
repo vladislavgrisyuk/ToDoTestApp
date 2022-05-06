@@ -9,7 +9,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import ChapterItem from './chapterTabData/chapterItem';
 
 
-const ListChaptersTabData = () =>
+const ListChaptersTabData = ({ article }) =>
 {
 	let id = 0
 	const [chapters, setChapters] = useState([
@@ -68,6 +68,11 @@ const ListChaptersTabData = () =>
 			author: 'author'
 		},
 	]);
+
+	React.useEffect(() =>
+	{
+		setChapters(article.chapterList)
+	})
 
 	return (
 		<ScrollView style={ {
