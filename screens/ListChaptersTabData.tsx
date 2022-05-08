@@ -20,34 +20,58 @@ import {
 	ChapterElement,
 } from '../API/API';
 
-const ListChaptersTabData = ({ article }: ArticleProp) => {
-	let id = 0;
-	console.log('rerender list');
-	const myRenderItem = ({ item }) => (
-		<ChapterItem item={item} chapterList={article?.chapterList} />
-	);
-	return (
-		<ScrollView
-			style={{
-				flex: 1,
-				backgroundColor: 'white',
-			}}
-			showsVerticalScrollIndicator={false}
-		>
-			<FlatList
-				removeClippedSubviews={true}
-				initialNumToRender={100}
-				maxToRenderPerBatch={100}
-				updateCellsBatchingPeriod={100}
-				windowSize={3}
-				data={article?.chapterList}
-				renderItem={myRenderItem}
-				keyExtractor={val => val.id.toString()}
-				scrollEnabled={false}
-			/>
-		</ScrollView>
-	);
+type Props = {
+	article: ArticleData;
 };
+type State = {
+	article: ArticleData;
+};
+
+class ListChaptersTabData extends React.Component<Props, State> {
+	constructor(props: Props) {
+		super(props);
+		console.log(props.article);
+		this.state = {
+			article: props.article,
+		};
+	}
+
+	myRenderItem = ({ item }) => (
+		<ChapterItem
+			item={item}
+			chapterList={this.state.article?.chapterList}
+		/>
+	);
+
+	render() {
+		return (
+			<ScrollView
+				style={{
+					flex: 1,
+					backgroundColor: 'white',
+				}}
+				showsVerticalScrollIndicator={false}
+			>
+				<FlatList
+					removeClippedSubviews={true}
+					initialNumToRender={100}
+					maxToRenderPerBatch={100}
+					updateCellsBatchingPeriod={100}
+					windowSize={3}
+					data={this.state.article?.chapterList}
+					renderItem={({ item }) => (
+						<ChapterItem
+							item={item}
+							chapterList={this.state.article?.chapterList}
+						/>
+					)}
+					keyExtractor={val => val.id.toString()}
+					scrollEnabled={false}
+				/>
+			</ScrollView>
+		);
+	}
+}
 
 const stylesLocal = StyleSheet.create({});
 

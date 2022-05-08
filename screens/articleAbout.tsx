@@ -8,7 +8,7 @@ import {
 	Text,
 	View,
 } from 'react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { FontAwesome } from '@expo/vector-icons';
 import { Entypo } from '@expo/vector-icons';
@@ -51,6 +51,13 @@ type TabFooterProp = {
 const ArticleTabFooter = ({ article, moveDetailsView }: TabFooterProp) => {
 	const Tab = createMaterialTopTabNavigator();
 
+	const [articleDataCurrent, setArticleDataCurrent] = useState<ArticleData>();
+
+	useEffect(() => {
+		setArticleDataCurrent(article);
+		console.log('vakue' + articleDataCurrent);
+	}, []);
+
 	const tabLabels = {
 		info: (focused: boolean) => (
 			<AntDesign
@@ -89,7 +96,7 @@ const ArticleTabFooter = ({ article, moveDetailsView }: TabFooterProp) => {
 	);
 
 	const screen2 = (props: any) => (
-		<ListChaptersTabData {...props} article={article} />
+		<ListChaptersTabData {...props} article={articleDataCurrent} />
 	);
 	return (
 		<Tab.Navigator
@@ -139,234 +146,234 @@ const ArticleTabFooter = ({ article, moveDetailsView }: TabFooterProp) => {
 	);
 };
 
-const ArticleAbout = () => {
-	const route = useRoute<RouteProp<{ params: { href: string } }>>();
-	const [yOffset, setYOffset] = useState(0);
-	const [value, setValue] = useState<ArticleData | undefined>();
-	React.useEffect(() => {
-		getArticleData(route.params.href)
+type ArticleAboutProps = {
+	route: RouteProp<{ params: { href: string } }>;
+};
+
+type ArticleAboutState = {
+	articleData: ArticleData | undefined;
+};
+
+class ArticleAbout extends React.Component<
+	ArticleAboutProps,
+	ArticleAboutState
+> {
+	constructor(props: any) {
+		super(props);
+		this.state = {
+			articleData: undefined,
+		};
+		getArticleData(this.props.route.params.href)
 			.then(result => {
-				setValue(result);
+				this.setState({
+					articleData: result,
+				});
 			})
 			.catch(er => {
 				console.log(er);
 			});
-	}, []);
+	} // Note that there is no comma after the method completion
 
-	const DEFAULT_MARGIN_TOP = -30;
-	const marginOffset = useSharedValue(DEFAULT_MARGIN_TOP);
-
-	const myStyle = useAnimatedStyle(() => {
-		return {
-			marginTop: withTiming(marginOffset.value, {
-				duration: 400,
-				easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-			}),
-		};
-	});
-
-	function moveDetailsView(val: string) {
-		if (val == 'show') marginOffset.value = -300;
-		if (val == 'hide') marginOffset.value = DEFAULT_MARGIN_TOP;
-	}
-	let touchY = 0;
-	return (
-		<View
-			style={{
-				flex: 1,
-				position: 'relative',
-			}}
-		>
-			<View style={styles.container}>
-				<View
-					style={{
-						height: 340,
-						width: '100%',
-						zIndex: 1,
-						position: 'relative',
-					}}
-				>
-					<ImageBackground
-						style={{ width: '100%', height: '100%' }}
-						blurRadius={8}
-						resizeMode='cover'
-						source={{
-							uri: value?.img,
+	render() {
+		return (
+			<View
+				style={{
+					flex: 1,
+					position: 'relative',
+				}}
+			>
+				<View style={styles.container}>
+					<View
+						style={{
+							height: 340,
+							width: '100%',
+							zIndex: 1,
+							position: 'relative',
 						}}
 					>
-						<View
-							style={{
-								backgroundColor: 'rgba(0,0,0,0.60)',
-								flex: 1,
-								justifyContent: 'center',
-								alignItems: 'center',
-								overflow: 'hidden',
+						<ImageBackground
+							style={{ width: '100%', height: '100%' }}
+							blurRadius={8}
+							resizeMode='cover'
+							source={{
+								uri: this.state.articleData?.img,
 							}}
 						>
 							<View
 								style={{
-									borderRadius: 6,
+									backgroundColor: 'rgba(0,0,0,0.60)',
+									flex: 1,
+									justifyContent: 'center',
+									alignItems: 'center',
 									overflow: 'hidden',
-									width: 220,
-									height: 297,
-									marginBottom: -120,
 								}}
 							>
-								<Image
-									source={{ uri: value?.img }}
+								<View
 									style={{
+										borderRadius: 6,
+										overflow: 'hidden',
 										width: 220,
-										height: 350,
+										height: 297,
+										marginBottom: -120,
 									}}
-								/>
+								>
+									<Image
+										source={{
+											uri: this.state.articleData?.img,
+										}}
+										style={{
+											width: 220,
+											height: 350,
+										}}
+									/>
+								</View>
 							</View>
-						</View>
-					</ImageBackground>
-				</View>
-				<Animated.View
-					// onTouchStart={ e =>
-					// {
-					//     touchY = e.nativeEvent.pageY
-					// } }
-					// onTouchEnd={ e =>
-					// {
-					//     if (touchY - e.nativeEvent.pageY > 10)
-					//         moveDetailsView('show')
-					//     if (touchY - e.nativeEvent.pageY < -10)
-					//         moveDetailsView('hide')
-					//     console.log(touchY - e.nativeEvent.pageY)
-					// } }
-					style={[
-						{
-							borderRadius: 18,
-							zIndex: 999,
-							backgroundColor: 'white',
-							flex: 1,
-							marginTop: -30,
-						},
-						myStyle,
-					]}
-				>
-					<View>
-						<Text
-							ellipsizeMode='tail'
-							numberOfLines={1}
-							style={{
-								textAlign: 'center',
-								fontSize: 18,
-								fontFamily: exo600,
-								color: colorPrimary,
-								marginBottom: 5,
-								marginTop: 7,
-							}}
-						>
-							{value?.titleRu ?? '...'}
-						</Text>
+						</ImageBackground>
 					</View>
-					<View>
-						<Text
-							ellipsizeMode='tail'
-							numberOfLines={1}
-							style={{
-								textAlign: 'center',
-								fontFamily: exo400,
-								color: colorPrimary,
-								fontSize: 14,
-							}}
-						>
-							{value?.titleEn ?? '...'}
-						</Text>
-					</View>
-					<View
-						style={{
-							display: 'flex',
-							flexDirection: 'row',
-							height: 30,
-							alignItems: 'center',
-							justifyContent: 'center',
-						}}
+					<Animated.View
+						// onTouchStart={ e =>
+						// {
+						//     touchY = e.nativeEvent.pageY
+						// } }
+						// onTouchEnd={ e =>
+						// {
+						//     if (touchY - e.nativeEvent.pageY > 10)
+						//         moveDetailsView('show')
+						//     if (touchY - e.nativeEvent.pageY < -10)
+						//         moveDetailsView('hide')
+						//     console.log(touchY - e.nativeEvent.pageY)
+						// } }
+						style={[
+							{
+								borderRadius: 18,
+								zIndex: 999,
+								backgroundColor: 'white',
+								flex: 1,
+								marginTop: -30,
+							},
+						]}
 					>
-						{/* <Text style={ {
+						<View>
+							<Text
+								ellipsizeMode='tail'
+								numberOfLines={1}
+								style={{
+									textAlign: 'center',
+									fontSize: 18,
+									fontFamily: exo600,
+									color: colorPrimary,
+									marginBottom: 5,
+									marginTop: 7,
+								}}
+							>
+								{this.state.articleData?.titleRu ?? '...'}
+							</Text>
+						</View>
+						<View>
+							<Text
+								ellipsizeMode='tail'
+								numberOfLines={1}
+								style={{
+									textAlign: 'center',
+									fontFamily: exo400,
+									color: colorPrimary,
+									fontSize: 14,
+								}}
+							>
+								{this.state.articleData?.titleEn ?? '...'}
+							</Text>
+						</View>
+						<View
+							style={{
+								display: 'flex',
+								flexDirection: 'row',
+								height: 30,
+								alignItems: 'center',
+								justifyContent: 'center',
+							}}
+						>
+							{/* <Text style={ {
                             fontFamily: exo400
                         } }>16+</Text> */}
-						<Text
-							style={[
-								styles.articleMetaDataText,
-								styles.articleMetaDataPadding,
-							]}
-						>
-							{value?.year ?? '...'} 
-						</Text>
-						<Text
-							style={[
-								styles.articleMetaDataText,
-								styles.articleMetaDataPadding,
-							]}
-						>
-							{value?.type}
-						</Text>
-						<View
-							style={[
-								{
-									display: 'flex',
-									flexDirection: 'row',
-									justifyContent: 'flex-start',
-									alignContent: 'center',
-								},
-								styles.articleMetaDataPadding,
-							]}
-						>
-							<FontAwesome
-								style={{
-									alignSelf: 'center',
-								}}
-								name='star'
-								size={17}
-								color='#ffb656'
-							/>
 							<Text
 								style={[
+									styles.articleMetaDataText,
+									styles.articleMetaDataPadding,
+								]}
+							>
+								{this.state.articleData?.year ?? '...'} 
+							</Text>
+							<Text
+								style={[
+									styles.articleMetaDataText,
+									styles.articleMetaDataPadding,
+								]}
+							>
+								{this.state.articleData?.type}
+							</Text>
+							<View
+								style={[
 									{
-										alignSelf: 'center',
-										fontFamily: exo500,
-										color: '#868e96',
+										display: 'flex',
+										flexDirection: 'row',
+										justifyContent: 'flex-start',
+										alignContent: 'center',
 									},
 									styles.articleMetaDataPadding,
 								]}
 							>
-								{value?.rating ?? '...'}
-							</Text>
-							<Text
-								style={{
-									fontFamily: exo400,
-									color: '#868e96',
-									fontSize: 11,
-									alignSelf: 'center',
-									marginLeft: -3,
-								}}
-							>
-								[{value?.reviews ?? '...'}]
-							</Text>
+								<FontAwesome
+									style={{
+										alignSelf: 'center',
+									}}
+									name='star'
+									size={17}
+									color='#ffb656'
+								/>
+								<Text
+									style={[
+										{
+											alignSelf: 'center',
+											fontFamily: exo500,
+											color: '#868e96',
+										},
+										styles.articleMetaDataPadding,
+									]}
+								>
+									{this.state.articleData?.rating ?? '...'}
+								</Text>
+								<Text
+									style={{
+										fontFamily: exo400,
+										color: '#868e96',
+										fontSize: 11,
+										alignSelf: 'center',
+										marginLeft: -3,
+									}}
+								>
+									[{this.state.articleData?.reviews ?? '...'}]
+								</Text>
+							</View>
 						</View>
-					</View>
-					<ArticleTabFooter
-						article={value}
-						moveDetailsView={moveDetailsView}
-					/>
-				</Animated.View>
+						<ArticleTabFooter
+							article={this.state.articleData}
+							moveDetailsView={() => {}}
+						/>
+					</Animated.View>
+				</View>
+				<View
+					style={{
+						width: 30,
+						position: 'absolute',
+						left: 0,
+						top: 0,
+						bottom: 0,
+					}}
+				></View>
 			</View>
-			<View
-				style={{
-					width: 30,
-					position: 'absolute',
-					left: 0,
-					top: 0,
-					bottom: 0,
-				}}
-			></View>
-		</View>
-	);
-};
+		);
+	}
+}
 
 export default ArticleAbout;
 
