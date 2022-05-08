@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, Text, Button, FlatList } from 'react-native';
 import {
 	ScrollView,
@@ -22,12 +22,10 @@ import {
 
 const ListChaptersTabData = ({ article }: ArticleProp) => {
 	let id = 0;
-	const [chapters, setChapters] = useState<ChapterElement[]>();
-
-	React.useEffect(() => {
-		setChapters(article?.chapterList);
-	});
-
+	console.log('rerender list');
+	const myRenderItem = ({ item }) => (
+		<ChapterItem item={item} chapterList={article?.chapterList} />
+	);
 	return (
 		<ScrollView
 			style={{
@@ -37,8 +35,13 @@ const ListChaptersTabData = ({ article }: ArticleProp) => {
 			showsVerticalScrollIndicator={false}
 		>
 			<FlatList
-				data={chapters}
-				renderItem={({ item }) => <ChapterItem item={item} />}
+				removeClippedSubviews={true}
+				initialNumToRender={100}
+				maxToRenderPerBatch={100}
+				updateCellsBatchingPeriod={100}
+				windowSize={3}
+				data={article?.chapterList}
+				renderItem={myRenderItem}
 				keyExtractor={val => val.id.toString()}
 				scrollEnabled={false}
 			/>

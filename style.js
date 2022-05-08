@@ -5,6 +5,7 @@ const styles = StyleSheet.create({});
 
 const globalVars = {
 	varColorBlack: '#212529',
+	varColorHeaderBlack: '#1C1C1E',
 	varColorGray: '#868e96',
 	varColorOrange: '#f77519',
 	varColorLightWhite: '#DDDDDD',

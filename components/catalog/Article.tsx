@@ -32,10 +32,10 @@ const Article = ({ data }: CustomProp) => {
 							numberOfLines={2}
 							style={style.articleDescription}
 						>
-							{data.title}
+							{data.description}
 						</Text>
 						<Text numberOfLines={2} style={style.articleTitle}>
-							{data.chaptersCount}
+							{data.title}
 						</Text>
 					</View>
 				</ImageBackground>

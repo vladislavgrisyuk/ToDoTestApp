@@ -2,7 +2,7 @@ import axios from 'axios';
 var DomParser = require('react-native-html-parser').DOMParser;
 const cheerio = require('react-native-cheerio');
 
-const APIURL = 'https://mangapoisk.ru';
+const APIURL = 'https://mangamen.com/';
 
 export type ArticleImage = {
 	id: number;
@@ -11,21 +11,30 @@ export type ArticleImage = {
 
 const getImages = async (url: string) => {
 	try {
+		const reg = new RegExp('window.__pg =(.+])', 'g');
+
 		let obj: ArticleImage[] = [];
 		let j = 0;
 		await axios.get<ArticleImage[]>(APIURL + url).then(res => {
-			const $: any = cheerio.load(res.data);
-			obj = $('img.page-image').map(function (this: any) {
-				return {
-					id: j++,
-					href: $(this).attr('data-src') ?? $(this).attr('src'),
-				};
-			});
+			const imagesJson: ArticleImage[] = JSON.parse(
+				res.data
+					.toString()
+					.match(reg)[0]
+					.replace('window.__pg = ', '')
+					.replace(/\"p\"/g, '"id"')
+					.replace(/\"u\"/g, '"href"')
+					.trim()
+			);
+			obj = imagesJson;
+
+			// obj = $('img.page-image').map(function (this: any) {
+			// 	return {
+			// 		id: j++,
+			// 		href: $(this).attr('data-src') ?? $(this).attr('src'),
+			// 	};
+			// });
 		});
-		let b = obj.filter(v => {
-			return v != undefined;
-		});
-		return b;
+		return obj;
 	} catch (e) {
 		console.log(e);
 	}
@@ -42,7 +51,7 @@ export type ChapterElement = {
 export type ArticelDataDetailsElement = {
 	id: number;
 	name: string;
-	value: string;
+	value: string | string[];
 };
 
 export type ArticelGenreElement = {
@@ -69,64 +78,74 @@ export type ArticleData = {
 };
 
 const getArticleData = async (url: string) => {
+	console.log(APIURL + url.substring(1, url.length).trim());
 	let obj: ArticleData | undefined;
-	await axios.get<ArticleData>(APIURL + url).then(res => {
-		const $ = cheerio.load(res.data);
-
-		const article = $('div.card-body');
-		let i = 0;
-		let j = 0;
-		obj = {
-			titleRu: article.find('span.post-name').text(),
-			titleEn: article.find('span.post-name-en').text().replace('/', ''),
-			img: $('article img.img-fluid').attr('src'),
-			rating: article.find('b.ratingValue').text(),
-			reviews: $('div.post-info span').eq(0).text(),
-			detailsData: [
-				{
-					id: j++,
-					name: 'Загужено глав',
-					value: $('div.post-info span').eq(5).text().split(' ')[1],
-				},
-				{
-					id: j++,
-					name: 'Статус',
-					value: $('div.post-info span').eq(6).text().split(' ')[1],
-				},
-				{
-					id: j++,
-					name: 'Тип',
-					value: $('.entry-title')[0].childNodes[0].nodeValue.split(
-						'\n'
-					)[1],
-				},
-			],
-			type: $('.entry-title')[0].childNodes[0].nodeValue.split('\n')[1],
-			genres: $('div.post-info span')
-				.eq(8)
-				.text()
-				.split(', ')
-				.map((el: string) => {
+	await axios
+		.get<ArticleData>(APIURL + url.substring(1, url.length))
+		.then(res => {
+			const $ = cheerio.load(res.data);
+			const article = $('div.section__body');
+			let i = 0;
+			let j = 0;
+			let tempDetailsData: ArticelDataDetailsElement[] = $(
+				'.info-list__row'
+			)
+				.map(function (this: any) {
 					return {
-						name: el.trim(),
 						id: i++,
+						name: $(this).find('strong').text(),
+						value: $(this).find('span').text(),
 					};
+				})
+				.toArray();
+			obj = {
+				titleRu: $('.manga-title h1').text(),
+				titleEn: $('.manga-title h4').text(),
+				img: APIURL + $('.manga__image img').attr('src'),
+				rating: article.find('.manga-rating__value').text(),
+				reviews: $('.manga-rating__votes').text().split(' ')[1],
+				detailsData: tempDetailsData.filter(v => {
+					return (
+						v.name.trim().toLowerCase() != 'жанры' &&
+						v.name.trim().toLowerCase() != 'теги'
+					);
 				}),
-			year: $('div.post-info span').eq(9).text().split(' ')[1],
-			description: $('div.manga-description').text().trim(),
-			chapterList: $('ul.chapter-list-container li a').map(function (
-				this: any
-			) {
-				return {
-					id: j++,
-					href: $(this).attr('href'),
-					title: $(this).text().trim(),
-					date: '31.12.9999',
-					author: 'author',
-				};
-			}),
-		};
-	});
+				type: $('.entry-title')[0]?.childNodes[0]?.nodeValue.split(
+					'\n'
+				)[1],
+				genres: $('.info-list__row a')
+					.map(function (this: any) {
+						return {
+							name: $(this).text(),
+							id: i++,
+						};
+					})
+					.toArray(),
+				year: $('div.post-info span').eq(9).text().split(' ')[1],
+				description: $('.info-desc__content').text().trim(),
+				chapterList: $('.chapters-list .chapter-item')
+					.map(function (this: any) {
+						return {
+							id: j++,
+							href: $(this)
+								.find('.chapter-item__name a')
+								.attr('href')
+								.trim()
+								.substring(1),
+							title: $(this)
+								.find('.chapter-item__name')
+								.text()
+								.trim(),
+							date: $(this)
+								.find('.chapter-item__date')
+								.text()
+								.trim(),
+							author: 'admin',
+						};
+					})
+					.toArray(),
+			};
+		});
 	return obj;
 };
 
@@ -144,22 +163,23 @@ const getCatalog = async (url: string) => {
 		// console.log('started');
 		let catalogList: CatalogElement[] = [];
 		let i = 0;
-		await axios.get(url).then(res => {
+		await axios.get(APIURL + url).then(res => {
 			const $: any = cheerio.load(res.data);
-			$('article').map(function (this: any, i: number) {
+			$('a.media-card').map(function (this: any, i: number) {
 				// this === el
 				catalogList.push({
-					title: $(this).find('a').attr('title'),
-					description: $(this).find('p.card-text').text(),
-					href: $(this).find('a.card-about').attr('href'),
+					title: $(this).find('h5.media-card__subtitle').text(),
+					description: $(this).find('h3.media-card__title').text(),
+					href: $(this).attr('href'),
 					img:
-						$(this).find('img.card-img-top').attr('data-src') ??
-						$(this).find('img.card-img-top').attr('src'),
+						APIURL +
+						($(this).attr('data-src') ?? $(this).attr('src')),
 					id: i++,
-					chaptersCount: $(this)
-						.find('.card-numbers-item span')
-						.eq(0)
-						.text(),
+					// chaptersCount: $(this)
+					// 	.find('.card-numbers-item span')
+					// 	.eq(0)
+					// 	.text(),
+					chaptersCount: '0',
 				});
 			});
 			// console.log('ended');

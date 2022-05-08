@@ -1,9 +1,12 @@
 import React, { Component } from 'react';
 import { View, Easing, StyleSheet, Modal, Animated } from 'react-native';
 import GestureRecognizer from 'react-native-swipe-gestures';
+import { LogBox } from 'react-native';
 
+LogBox.ignoreAllLogs(true);
 type Props = {
 	isModalVisible: boolean;
+	renderElement: any;
 };
 
 type State = {
@@ -75,34 +78,34 @@ class SlideableComponent extends Component<Props, State> {
 				style={{ flex: 1 }}
 				onSwipeUp={() => this.setState({ isModalVisible: true })}
 				onSwipeDown={() => this.setState({ isModalVisible: false })}
-				onTouchStart={e => {
-					this.setState({
-						dragStartPoint:
-							e.nativeEvent.pageY + this.state.currentAnimValue,
-					});
-					this.setState({
-						skips: 1,
-					});
-				}}
-				onTouchMove={e => {
-					this.setState({
-						dragDeltaY:
-							e.nativeEvent.pageY - this.state.dragStartPoint,
-					});
-					if (this.state.skips == 0) {
-						this.fadeIn();
-					} else {
-						this.setState({
-							skips: 0,
-						});
-					}
-				}}
-				onTouchEnd={() => {
-					this.setState({
-						startedTouch: false,
-					});
-					this.fadeOut();
-				}}
+				// onTouchStart={e => {
+				// 	this.setState({
+				// 		dragStartPoint:
+				// 			e.nativeEvent.pageY + this.state.currentAnimValue,
+				// 	});
+				// 	this.setState({
+				// 		skips: 1,
+				// 	});
+				// }}
+				// onTouchMove={e => {
+				// 	this.setState({
+				// 		dragDeltaY:
+				// 			e.nativeEvent.pageY - this.state.dragStartPoint,
+				// 	});
+				// 	if (this.state.skips == 0) {
+				// 		this.fadeIn();
+				// 	} else {
+				// 		this.setState({
+				// 			skips: 0,
+				// 		});
+				// 	}
+				// }}
+				// onTouchEnd={() => {
+				// 	this.setState({
+				// 		startedTouch: false,
+				// 	});
+				// 	this.fadeOut();
+				// }}
 			>
 				<Modal
 					style={{
@@ -112,8 +115,6 @@ class SlideableComponent extends Component<Props, State> {
 					animationType='slide'
 					visible={this.state.isModalVisible}
 					transparent={true}
-					collapsable={true}
-					onRequestClose={() => {}}
 				>
 					<View style={styles.sliderContainer}>
 						<Animated.View
@@ -127,7 +128,9 @@ class SlideableComponent extends Component<Props, State> {
 									marginBottom: this.state.fadeAnim,
 								},
 							]}
-						></Animated.View>
+						>
+							<this.props.renderElement />
+						</Animated.View>
 					</View>
 				</Modal>
 			</GestureRecognizer>

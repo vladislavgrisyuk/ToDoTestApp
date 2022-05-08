@@ -80,7 +80,17 @@ const ArticleTabFooter = ({ article, moveDetailsView }: TabFooterProp) => {
 			/>
 		),
 	};
+	const screen1 = (props: any) => (
+		<InfoTabData
+			{...props}
+			article={article}
+			moveDetailsView={moveDetailsView}
+		/>
+	);
 
+	const screen2 = (props: any) => (
+		<ListChaptersTabData {...props} article={article} />
+	);
 	return (
 		<Tab.Navigator
 			style={{
@@ -109,13 +119,7 @@ const ArticleTabFooter = ({ article, moveDetailsView }: TabFooterProp) => {
 				}}
 				name='Информация'
 			>
-				{props => (
-					<InfoTabData
-						{...props}
-						article={article}
-						moveDetailsView={moveDetailsView}
-					/>
-				)}
+				{screen1}
 			</Tab.Screen>
 			<Tab.Screen
 				options={{
@@ -123,7 +127,7 @@ const ArticleTabFooter = ({ article, moveDetailsView }: TabFooterProp) => {
 				}}
 				name='Главы'
 			>
-				{props => <ListChaptersTabData {...props} article={article} />}
+				{screen2}
 			</Tab.Screen>
 			{/* <Tab.Screen
                 options={ {

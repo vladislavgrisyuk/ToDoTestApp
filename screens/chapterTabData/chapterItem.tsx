@@ -11,9 +11,13 @@ import { ChapterElement } from '../../API/API';
 
 type ChapterItemProp = {
 	item: ChapterElement;
+	chapterList: ChapterElement[] | undefined;
 };
 
-const ChapterItem: FC<ChapterItemProp> = ({ item }: ChapterItemProp) => {
+const ChapterItem: FC<ChapterItemProp> = ({
+	item,
+	chapterList,
+}: ChapterItemProp) => {
 	const navigation = useNavigation<any>();
 	return (
 		<TouchableOpacity
@@ -26,7 +30,10 @@ const ChapterItem: FC<ChapterItemProp> = ({ item }: ChapterItemProp) => {
 				borderBottomColor: 'hsla(240,4%,48%,.12)',
 			}}
 			onPress={() => {
-				navigation.navigate('read', { href: item.href });
+				navigation.navigate('read', {
+					href: item.href,
+					chapterList: chapterList,
+				});
 			}}
 		>
 			<View

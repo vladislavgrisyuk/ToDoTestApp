@@ -39,6 +39,7 @@ class ImageComponent extends Component<Props, State> {
 		return (
 			<View
 				style={{
+					flex: 1,
 					position: 'relative',
 				}}
 			>

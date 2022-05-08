@@ -27,7 +27,7 @@ const ArticleList = () => {
 	const [value, setValue] = useState<CatalogElement[] | undefined>([]);
 
 	React.useEffect(() => {
-		getCatalog('https://mangapoisk.ru/manga')
+		getCatalog('manga-list?sort=views&dir=desc')
 			.then(v => {
 				setValue(v);
 			})
