@@ -22,22 +22,21 @@ import Readerview from './screens/ReaderView';
 import ReaderView from './screens/ReaderView';
 import { LogBox } from 'react-native';
 import { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
-import { FC } from 'react';
+import { createContext, FC, useState } from 'react';
+import UserContext from './UserContext';
 LogBox.ignoreLogs(['Warning: ...']); // Ignore log notification by message
 LogBox.ignoreAllLogs(); //Ignore all log notifications
 
 const App: FC = () => {
 	const Stack = createStackNavigator();
 	const Drawer = createDrawerNavigator();
+	const [isLight, setIsLight] = useState(true);
+	const [isHorizontal, setIsHorizontal] = useState(false);
 	let [fontsLoaded] = useFonts({
 		Exo2_400Regular,
 		Exo2_500Medium,
 		Exo2_600SemiBold,
 	});
-
-	const Cat = () => {
-		return <ArticleAbout />;
-	};
 
 	const MainDrawer = () => {
 		return (
@@ -96,40 +95,42 @@ const App: FC = () => {
 		);
 	};
 	return (
-		<NavigationContainer>
-			<Stack.Navigator
-				screenOptions={{
-					headerShown: false,
-				}}
-			>
-				<Stack.Screen
-					name='MainDrawer'
-					component={MainDrawer}
-				></Stack.Screen>
-				<Stack.Group
+		<UserContext.Provider value={{ isHorizontal, setIsHorizontal }}>
+			<NavigationContainer>
+				<Stack.Navigator
 					screenOptions={{
-						presentation: 'card',
 						headerShown: false,
-						gestureEnabled: true,
-						gestureResponseDistance: 70,
 					}}
 				>
 					<Stack.Screen
-						options={{
+						name='MainDrawer'
+						component={MainDrawer}
+					></Stack.Screen>
+					<Stack.Group
+						screenOptions={{
+							presentation: 'card',
 							headerShown: false,
-							detachPreviousScreen: false,
+							gestureEnabled: true,
+							gestureResponseDistance: 70,
 						}}
-						name='catalog2'
-						component={ArticleAbout}
-					></Stack.Screen>
-					<Stack.Screen
-						options={{ headerShown: false }}
-						name='read'
-						component={ReaderView}
-					></Stack.Screen>
-				</Stack.Group>
-			</Stack.Navigator>
-		</NavigationContainer>
+					>
+						<Stack.Screen
+							options={{
+								headerShown: false,
+								detachPreviousScreen: false,
+							}}
+							name='catalog2'
+							component={ArticleAbout}
+						></Stack.Screen>
+						<Stack.Screen
+							options={{ headerShown: false }}
+							name='read'
+							component={ReaderView}
+						></Stack.Screen>
+					</Stack.Group>
+				</Stack.Navigator>
+			</NavigationContainer>
+		</UserContext.Provider>
 	);
 };
 

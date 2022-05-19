@@ -30,19 +30,8 @@ const ScrollCatalog = () => {
 					component={ArticleList}
 				></Stack.Screen>
 			</Stack.Group>
-			<Stack.Group screenOptions={{ presentation: 'modal' }}>
-				<Stack.Screen
-					options={{ headerShown: false }}
-					name='TextS'
-					component={TextS}
-				></Stack.Screen>
-			</Stack.Group>
 		</Stack.Navigator>
 	);
-};
-
-const TextS = () => {
-	return <Text>Text</Text>;
 };
 
 const Catalog = () => {

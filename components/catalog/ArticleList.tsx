@@ -21,6 +21,7 @@ import { SetOpenDrawerRight } from '../../NavigationService';
 
 import { CatalogElement, getCatalog } from '../../API/API';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
+import UserContext from '../../UserContext';
 
 const ArticleList = () => {
 	const navigation = useNavigation<any>();

@@ -1,4 +1,11 @@
-import React, { createRef, FC, useCallback, useRef, useState } from 'react';
+import React, {
+	createRef,
+	FC,
+	useCallback,
+	useContext,
+	useRef,
+	useState,
+} from 'react';
 import {
 	View,
 	StyleSheet,
@@ -7,6 +14,8 @@ import {
 	Image,
 	Button,
 	Modal,
+	NativeSyntheticEvent,
+	NativeScrollEvent,
 } from 'react-native';
 import {
 	ScrollView,
@@ -22,7 +31,8 @@ import Animated, {
 	withSpring,
 	withTiming,
 } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native';
+import { useNavigation } from '@react-navigation/core';
 import {
 	ArticleImage,
 	ChapterElement,
@@ -42,6 +52,8 @@ import BottomSheet, {
 	BottomSheetFlatList,
 	BottomSheetView,
 } from '@gorhom/bottom-sheet';
+import UserContext from '../UserContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type renderItem = {
 	item: ArticleImage;
@@ -50,16 +62,21 @@ type renderItem = {
 
 type MyRoute = {
 	href: string;
+	item: ChapterElement;
 	chapterList: ChapterElement[] | undefined;
 };
 
 const ReaderView: FC = () => {
 	const route = useRoute<RouteProp<{ params: MyRoute }>>();
 	const chapterList = route.params.chapterList;
+	const [href, setHref] = useState('');
+	const { top, bottom } = useSafeAreaInsets();
 	const TOP_HEADER_HEIGHT = 100;
 	let scrollLastPositionY = 1;
-	const topHeaderOffsetY = useSharedValue(0);
-	const [isHeaderShown, setisHeaderShown] = useState(true);
+	const [isHeaderShown, setisHeaderShown] = useState(route.params.href);
+	const [chapterData, setChapterData] = useState<ChapterElement>(
+		route.params.item
+	);
 	let isShown = true;
 
 	function showHeaders() {
@@ -71,32 +88,22 @@ const ReaderView: FC = () => {
 		topHeaderOffsetY.value = -TOP_HEADER_HEIGHT;
 		isShown = false;
 	}
-
-	const style = useAnimatedStyle(() => {
-		return {
-			marginTop: withTiming(topHeaderOffsetY.value, {
-				duration: 300,
-				easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-			}),
-		};
-	});
-
+	const topHeaderOffsetY = useSharedValue(0);
+	const [extra, setExtra] = useState(false);
 	const [images, setImages] = useState<ArticleImage[] | undefined>([]);
+
 	React.useEffect(() => {
-		getImages(route.params.href)
+		console.log('fetchimg');
+		getImages(href == '' ? chapterData.href : href)
 			.then(result => {
 				setImages(result);
 			})
 			.catch(er => {
 				console.log(er);
 			});
-	}, []);
-
-	let a: number[] = [];
-
-	React.useEffect(() => {
-		console.log('changed');
-	}, [a]);
+		console.log('loaded');
+	}, [chapterData]);
+	const context = useContext(UserContext);
 
 	let index = 0;
 	const [myr, setMyr] = useState<FlatList<ArticleImage> | null>(null);
@@ -110,32 +117,28 @@ const ReaderView: FC = () => {
 		),
 		[]
 	);
+	const headerScrollHideController:
+		| ((event: NativeSyntheticEvent<NativeScrollEvent>) => void)
+		| undefined = e => {
+		if (context.isHorizontal) {
+			if (scrollLastPositionY - e.nativeEvent.contentOffset.y > 10)
+				showHeaders();
+			if (scrollLastPositionY - e.nativeEvent.contentOffset.y < -10)
+				hideHeaders();
+		}
+		scrollLastPositionY = e.nativeEvent.contentOffset.y;
+	};
+
 	const renderItem = ({ item, index }: renderItem) => {
 		return (
 			<ScrollView
 				keyboardShouldPersistTaps='always'
 				bounces={false}
-				maximumZoomScale={2}
+				scrollEventThrottle={16}
+				onScroll={headerScrollHideController}
+				maximumZoomScale={context.isHorizontal ? 2 : 1}
 				minimumZoomScale={1}
 				bouncesZoom={false}
-				scrollEventThrottle={16}
-				onScroll={e => {
-					if (!isHorizontal) {
-						if (
-							scrollLastPositionY -
-								e.nativeEvent.contentOffset.y >
-							10
-						)
-							showHeaders();
-						if (
-							scrollLastPositionY -
-								e.nativeEvent.contentOffset.y <
-							-10
-						)
-							hideHeaders();
-					}
-					scrollLastPositionY = e.nativeEvent.contentOffset.y;
-				}}
 			>
 				<ImageComponent
 					key={index}
@@ -143,19 +146,23 @@ const ReaderView: FC = () => {
 					onSwitchHeaderShown={() => {
 						isShown ? hideHeaders() : showHeaders();
 					}}
-					onNextChapterClicked={() =>
-						myr?.scrollToIndex({
-							index:
-								index + 1 >= (images?.length ?? 0)
-									? index
-									: index + 1,
-						})
-					}
-					onPreviousChapterClicked={() =>
-						myr?.scrollToIndex({
-							index: index - 1 < 0 ? index : index - 1,
-						})
-					}
+					onNextChapterClicked={() => {
+						if (context.isHorizontal) {
+							myr?.scrollToIndex({
+								index:
+									index + 1 >= (images?.length ?? 0)
+										? index
+										: index + 1,
+							});
+						}
+					}}
+					onPreviousChapterClicked={() => {
+						if (context.isHorizontal) {
+							myr?.scrollToIndex({
+								index: index - 1 < 0 ? index : index - 1,
+							});
+						}
+					}}
 				/>
 			</ScrollView>
 		);
@@ -165,160 +172,45 @@ const ReaderView: FC = () => {
 	const flHeight = useSharedValue(0);
 	const layout = useSharedValue(0);
 	const sheetRef = React.useRef<SlideableComponent | null>(null);
-	const articleCommentSection = useAnimatedStyle(() => {
-		return {
-			marginTop: withTiming(flHeight.value, {
-				duration: 300,
-				easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-			}),
-		};
-	});
-	let modalSetting = createRef();
+
 	const bottomSheetRef = useRef<BottomSheet>(null);
-	const handleSheetChanges = useCallback((index: number) => {
-		console.log('handleSheetChanges', a);
-		a.push(3);
-	}, []);
+	const navigation = useNavigation<any>();
+	const [zoomsc, setZoomsc] = useState(1);
+
 	return (
 		<>
-			<SafeAreaView
+			<View
 				style={{
-					flex: 1,
 					position: 'relative',
-					backgroundColor: '#1c1c1e',
+					zIndex: 9999,
+					backgroundColor: 'rgba(1, 1, 255, 0)',
 				}}
 			>
-				<Animated.View
-					style={[
-						{
-							backgroundColor: '#1c1c1e',
-						},
-						style,
-					]}
-				>
-					<View
-						style={{
-							alignContent: 'center',
-							display: 'flex',
-							flexDirection: 'row',
-							height: 42,
-						}}
-					>
-						<View>
-							<Text>=</Text>
-						</View>
-						<View
-							style={{
-								display: 'flex',
-								flexGrow: 1,
-							}}
-						>
-							<View
-								style={{
-									display: 'flex',
-									flexGrow: 1,
-								}}
-							>
-								<Text
-									numberOfLines={1}
-									ellipsizeMode='clip'
-									style={{
-										color: '#DDD',
-										fontSize: 15,
-										fontFamily: globalVars.fontExo400,
-										marginBottom: 2,
-									}}
-								>
-									Название главы
-								</Text>
-								<Text
-									style={{
-										color: '#DDD',
-										fontSize: 12,
-										fontFamily: globalVars.fontExo400,
-										opacity: 0.8,
-									}}
-								>
-									Том 1 Глава 77
-								</Text>
-							</View>
-						</View>
-						<View style={[styles.topBarElements]}>
-							<TouchableOpacity
-								style={[
-									styles.topHeaderButtons,
-									styles.topHeaderButtons_firstChild,
-								]}
-							>
-								<FontAwesome
-									name='bookmark'
-									size={19}
-									color='#DDD'
-								/>
-							</TouchableOpacity>
-						</View>
-						<View style={styles.topBarElements}>
-							<TouchableOpacity
-								style={[styles.topHeaderButtons]}
-								onPress={() => {
-									if (sheetRef != null)
-										sheetRef?.current?.open();
-									bottomSheetRef.current?.expand();
-								}}
-							>
-								<FontAwesome
-									name='list-ol'
-									size={18}
-									color='#DDD'
-								/>
-							</TouchableOpacity>
-						</View>
-						<View style={styles.topBarElements}>
-							<TouchableOpacity
-								style={[
-									styles.topHeaderButtons,
-									styles.topHeaderButtons_lastChild,
-								]}
-							>
-								<SimpleLineIcons
-									name='options-vertical'
-									size={17}
-									color='#DDD'
-								/>
-							</TouchableOpacity>
-						</View>
-						{/* <Modal animationType="slide"
-                        ref={ (ref) => { modealSettings = ref } }
-                        collapsable={ true }
-                        visible={ isModalVisible }
-                        style={ {
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            margin: 0
-                        } }
-                    >
-
-                    </Modal> */}
-					</View>
-				</Animated.View>
-				{/* <Animated.View style={ [{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: 100,
-                backgroundColor: 'red',
-                zIndex: 9999
-            }, footerStyle] } /> */}
-				<FlatList
-					style={[
-						{
-							height: '50%',
-							backgroundColor: '#141414',
-						},
-					]}
-					ref={ref => setMyr(ref)}
-					onScroll={e => {
+				<AnimatedHeader
+					chapterData={chapterData}
+					topHeaderOffsetY={topHeaderOffsetY}
+					sheetRef={sheetRef}
+					bottomSheetRef={bottomSheetRef}
+				/>
+			</View>
+			<FlatList
+				onTouchMove={e => {
+					e.nativeEvent.touches.length;
+				}}
+				maximumZoomScale={context.isHorizontal ? 1 : 2}
+				minimumZoomScale={1}
+				bouncesZoom={false}
+				extraData={images}
+				style={[
+					{
+						height: '50%',
+						backgroundColor: '#141414',
+					},
+				]}
+				ref={ref => setMyr(ref)}
+				onScroll={e => {
+					// if (e.nativeEvent.zoomScale != 1) return;
+					if (!context.isHorizontal) {
 						if (
 							scrollLastPositionY -
 								e.nativeEvent.contentOffset.y >
@@ -332,39 +224,48 @@ const ReaderView: FC = () => {
 						)
 							hideHeaders();
 						scrollLastPositionY = e.nativeEvent.contentOffset.y;
-					}}
-					onLayout={e => {
-						layout.value = e.nativeEvent.layout.height;
-					}}
-					bounces={false}
-					horizontal={isHorizontal}
-					keyboardShouldPersistTaps='always'
-					showsVerticalScrollIndicator={true}
-					removeClippedSubviews={true}
-					initialNumToRender={2}
-					maxToRenderPerBatch={1}
-					disableVirtualization={true}
-					updateCellsBatchingPeriod={100}
-					windowSize={7}
-					data={images}
-					renderItem={renderItem}
-					pagingEnabled={isHorizontal}
-					ListEmptyComponent={() => <Text>Loading...</Text>}
-					onMomentumScrollEnd={event => {
-						index = Math.floor(
-							event.nativeEvent.contentOffset.x /
-								event.nativeEvent.layoutMeasurement.width
-						);
-						Image.getSize(images![index].href, (w, h) => {
-							const screenWidth = globalVars.screenWidth;
-							const scaleFactor = screenWidth / w;
-							const imageHeight = h * scaleFactor;
-							flHeight.value = imageHeight - layout.value;
-						});
-						// work with: index
-					}}
-				></FlatList>
-				{/* <Animated.View
+					}
+				}}
+				onLayout={e => {
+					layout.value = e.nativeEvent.layout.height;
+				}}
+				bounces={false}
+				horizontal={context.isHorizontal}
+				keyboardShouldPersistTaps='always'
+				showsVerticalScrollIndicator={true}
+				removeClippedSubviews={true}
+				initialNumToRender={2}
+				maxToRenderPerBatch={1}
+				disableVirtualization={true}
+				updateCellsBatchingPeriod={100}
+				windowSize={7}
+				data={images}
+				renderItem={renderItem}
+				pagingEnabled={context.isHorizontal}
+				ListEmptyComponent={() => (
+					<View
+						style={{
+							backgroundColor: 'red',
+						}}
+					>
+						<Text>Loading...</Text>
+					</View>
+				)}
+				onMomentumScrollEnd={event => {
+					index = Math.floor(
+						event.nativeEvent.contentOffset.x /
+							event.nativeEvent.layoutMeasurement.width
+					);
+					Image.getSize(images![index].href, (w, h) => {
+						const screenWidth = globalVars.screenWidth;
+						const scaleFactor = screenWidth / w;
+						const imageHeight = h * scaleFactor;
+						flHeight.value = imageHeight - layout.value;
+					});
+					// work with: index
+				}}
+			></FlatList>
+			{/* <Animated.View
                 style={ [{
                     flex: 1,
                     zIndex: 999,
@@ -373,23 +274,22 @@ const ReaderView: FC = () => {
             >
                 <Text>dsfsdfdssdfsdfa</Text>
             </Animated.View> */}
-				<View
-					style={{
-						position: 'absolute',
-						zIndex: 999,
-						left: 0,
-						top: 0,
-						bottom: 0,
-						width: 20,
-					}}
-				></View>
-			</SafeAreaView>
+			<View
+				style={{
+					position: 'absolute',
+					zIndex: 999,
+					left: 0,
+					top: 0,
+					bottom: 0,
+					width: 20,
+				}}
+			></View>
+
 			<BottomSheet
 				snapPoints={['70%']}
 				ref={bottomSheetRef}
 				enablePanDownToClose={true}
 				index={-1}
-				onChange={handleSheetChanges}
 				backdropComponent={renderBackdrop}
 				backgroundStyle={{
 					backgroundColor: globalVars.varColorHeaderBlack,
@@ -434,6 +334,28 @@ const ReaderView: FC = () => {
 									borderTopColor: 'rgba(255,255,255,.08)',
 									paddingHorizontal: 10,
 									paddingVertical: 12,
+								}}
+								onPress={() => {
+									if (item.item === chapterData) {
+										bottomSheetRef.current?.close();
+										return;
+									}
+									myr?.setNativeProps({
+										zoomScale: 1,
+									});
+									bottomSheetRef.current?.close();
+									setImages([]);
+									setChapterData(item.item);
+									// setHref(item.item.href);
+
+									try {
+										myr?.scrollToIndex({
+											animated: false,
+											index: 0,
+										});
+									} catch (e) {
+										console.log(e);
+									}
 								}}
 							>
 								<Text
@@ -489,6 +411,143 @@ const TempRenderItem = ({ chapterList }: RenderItemProp) => {
 				</View>
 			</TouchableWithoutFeedback>
 		</TouchableOpacity>
+	);
+};
+
+const AnimatedHeader = ({
+	topHeaderOffsetY,
+	sheetRef,
+	bottomSheetRef,
+	chapterData,
+}) => {
+	const style = useAnimatedStyle(() => {
+		return {
+			top: withTiming(topHeaderOffsetY.value, {
+				duration: 500,
+				easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+			}),
+		};
+	});
+	const { top } = useSafeAreaInsets();
+	const context = useContext(UserContext);
+	const navigation = useNavigation();
+	return (
+		<Animated.View
+			style={[
+				{
+					paddingTop: top,
+					backgroundColor: 'rgba(28,28,30,0.93)',
+					position: 'absolute',
+					left: 0,
+					right: 0,
+					zIndex: 9999999,
+				},
+
+				style,
+			]}
+		>
+			<View
+				style={{
+					alignContent: 'center',
+					display: 'flex',
+					flexDirection: 'row',
+					height: 42,
+				}}
+			>
+				<View>
+					<Text>=</Text>
+				</View>
+				<View
+					style={{
+						display: 'flex',
+						flexGrow: 1,
+					}}
+				>
+					<View
+						style={{
+							display: 'flex',
+							flexGrow: 1,
+						}}
+					>
+						<Text
+							numberOfLines={1}
+							ellipsizeMode='clip'
+							style={{
+								color: '#DDD',
+								fontSize: 15,
+								fontFamily: globalVars.fontExo400,
+								marginBottom: 2,
+							}}
+						>
+							{chapterData?.title}
+						</Text>
+						<Text
+							style={{
+								color: '#DDD',
+								fontSize: 12,
+								fontFamily: globalVars.fontExo400,
+								opacity: 0.8,
+							}}
+						>
+							admin
+						</Text>
+					</View>
+				</View>
+				<View style={[styles.topBarElements]}>
+					<TouchableOpacity
+						style={[
+							styles.topHeaderButtons,
+							styles.topHeaderButtons_firstChild,
+						]}
+						onPress={() => {
+							context.setIsHorizontal(!context.isHorizontal);
+						}}
+					>
+						<FontAwesome name='bookmark' size={19} color='#DDD' />
+					</TouchableOpacity>
+				</View>
+				<View style={styles.topBarElements}>
+					<TouchableOpacity
+						style={[styles.topHeaderButtons]}
+						onPress={() => {
+							if (sheetRef != null) sheetRef?.current?.open();
+							bottomSheetRef.current?.expand();
+						}}
+					>
+						<FontAwesome name='list-ol' size={18} color='#DDD' />
+					</TouchableOpacity>
+				</View>
+				<View style={styles.topBarElements}>
+					<TouchableOpacity
+						onPress={() => {
+							// navigation.openDrawer();
+						}}
+						style={[
+							styles.topHeaderButtons,
+							styles.topHeaderButtons_lastChild,
+						]}
+					>
+						<SimpleLineIcons
+							name='options-vertical'
+							size={17}
+							color='#DDD'
+						/>
+					</TouchableOpacity>
+				</View>
+				{/* <Modal animationType="slide"
+                        ref={ (ref) => { modealSettings = ref } }
+                        collapsable={ true }
+                        visible={ isModalVisible }
+                        style={ {
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            margin: 0
+                        } }
+                    >
+
+                    </Modal> */}
+			</View>
+		</Animated.View>
 	);
 };
 export default ReaderView;

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, StyleSheet, Image, Text } from 'react-native';
+import { View, StyleSheet, Image, Text, ActivityIndicator } from 'react-native';
 import {
 	TouchableHighlight,
 	TouchableOpacity,
@@ -19,20 +19,37 @@ type Props = {
 type State = {
 	imgWidth: number;
 	imgHeight: number;
+	isLoading: boolean;
 };
 
 class ImageComponent extends Component<Props, State> {
 	state: State = {
 		imgWidth: 0,
 		imgHeight: 0,
+		isLoading: false,
 	};
+
 	componentDidMount() {
-		Image.getSize(this.props.href, (w, h) => {
-			const screenWidth = globalVars.screenWidth;
-			const scaleFactor = screenWidth / w;
-			const imageHeight = h * scaleFactor;
-			this.setState({ imgWidth: screenWidth, imgHeight: imageHeight });
-		});
+		Image.getSizeWithHeaders(
+			this.props.href,
+			{
+				Accept: 'image/webp,image/png,image/svg+xml,image/*;q=0.8,video/*;q=0.8,*/*;q=0.5',
+				'Accept-Language': 'ru',
+				Referer: 'https://mangamen.com/',
+				Host: 'img2.mangaimg.ru',
+				'User-Agent':
+					'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.2 Safari/605.1.15',
+			},
+			(w, h) => {
+				const screenWidth = globalVars.screenWidth;
+				const scaleFactor = screenWidth / w;
+				const imageHeight = h * scaleFactor;
+				this.setState({
+					imgWidth: screenWidth,
+					imgHeight: imageHeight,
+				});
+			}
+		);
 	}
 	render() {
 		const { imgHeight, imgWidth } = this.state;
@@ -43,7 +60,21 @@ class ImageComponent extends Component<Props, State> {
 					position: 'relative',
 				}}
 			>
+				{this.state.isLoading && (
+					<ActivityIndicator size='large' color='#FFD700' />
+				)}
 				<Image
+					onLoadStart={() => {
+						this.setState({
+							isLoading: true,
+						});
+					}}
+					onLoadEnd={() => {
+						this.setState({
+							isLoading: false,
+						});
+					}}
+					progressiveRenderingEnabled={true}
 					style={{
 						width: imgWidth,
 						height: imgHeight,

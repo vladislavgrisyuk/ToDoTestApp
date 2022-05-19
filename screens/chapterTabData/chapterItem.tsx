@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 
@@ -18,6 +18,10 @@ const ChapterItem: FC<ChapterItemProp> = ({
 	item,
 	chapterList,
 }: ChapterItemProp) => {
+	useEffect(() => {
+		console.log('chapterItem');
+	});
+
 	const navigation = useNavigation<any>();
 	return (
 		<TouchableOpacity
@@ -32,6 +36,7 @@ const ChapterItem: FC<ChapterItemProp> = ({
 			onPress={() => {
 				navigation.navigate('read', {
 					href: item.href,
+					item: item,
 					chapterList: chapterList,
 				});
 			}}

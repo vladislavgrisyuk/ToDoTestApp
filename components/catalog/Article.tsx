@@ -28,14 +28,14 @@ const Article = ({ data }: CustomProp) => {
 					source={{ uri: data.img }}
 				>
 					<View style={style.articleData}>
+						<Text numberOfLines={2} style={style.articleTitle}>
+							{data.title}
+						</Text>
 						<Text
 							numberOfLines={2}
 							style={style.articleDescription}
 						>
 							{data.description}
-						</Text>
-						<Text numberOfLines={2} style={style.articleTitle}>
-							{data.title}
 						</Text>
 					</View>
 				</ImageBackground>

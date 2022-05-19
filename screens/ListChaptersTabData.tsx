@@ -20,27 +20,56 @@ import {
 	ChapterElement,
 } from '../API/API';
 
+
 type Props = {
 	article: ArticleData;
 };
 type State = {
 	article: ArticleData;
+	isChanged: boolean;
 };
 
 class ListChaptersTabData extends React.Component<Props, State> {
 	constructor(props: Props) {
 		super(props);
-		console.log(props.article);
 		this.state = {
 			article: props.article,
+			isChanged: false,
 		};
 	}
 
+	shouldComponentUpdate(previousProps, previousState) {
+		console.log('REQUEST UPDATE');
+		if (
+			previousProps.article !== this.props.article ||
+			this.state.isChanged
+		) {
+			console.log('NEED UPDATE');
+			this.setState({
+				isChanged: false,
+			});
+			return true;
+		}
+		return false;
+	}
+
+	componentDidUpdate(previousProps, previousState) {
+		if (previousProps.article !== this.props.article) {
+			console.log('this is updated');
+			this.setState({
+				article: this.props.article,
+				isChanged: true,
+			});
+		}
+	}
+
 	myRenderItem = ({ item }) => (
+
 		<ChapterItem
 			item={item}
 			chapterList={this.state.article?.chapterList}
 		/>
+		
 	);
 
 	render() {
@@ -53,11 +82,29 @@ class ListChaptersTabData extends React.Component<Props, State> {
 				showsVerticalScrollIndicator={false}
 			>
 				<FlatList
+					extraData={this.state.isChanged}
 					removeClippedSubviews={true}
 					initialNumToRender={100}
 					maxToRenderPerBatch={100}
 					updateCellsBatchingPeriod={100}
 					windowSize={3}
+					ListEmptyComponent={() => {
+						return (
+							<View
+								style={{
+									justifyContent: 'center',
+								}}
+							>
+								<Text
+									style={{
+										textAlign: 'center',
+									}}
+								>
+									Loading chapters...
+								</Text>
+							</View>
+						);
+					}}
 					data={this.state.article?.chapterList}
 					renderItem={({ item }) => (
 						<ChapterItem

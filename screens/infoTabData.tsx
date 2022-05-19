@@ -18,9 +18,13 @@ const blackColor = '#212529';
 type InfoTabDataProp = {
 	article: ArticleData | undefined;
 	moveDetailsView: (v: string) => void;
+	onChildrenScroll: (v: number) => void;
 };
 
-const InfoTabData: FC<InfoTabDataProp> = ({ article }: InfoTabDataProp) => {
+const InfoTabData: FC<InfoTabDataProp> = ({
+	article,
+	onChildrenScroll,
+}: InfoTabDataProp) => {
 	const description = article?.description;
 	let i = 0;
 	const [articelData, setArticelData] = useState<
@@ -41,13 +45,18 @@ const InfoTabData: FC<InfoTabDataProp> = ({ article }: InfoTabDataProp) => {
 	const [genres, setGenres] = useState<ArticelGenreElement[] | undefined>([]);
 
 	React.useEffect(() => {
+		console.log('INFO UPDATE');
 		setGenres(article?.genres);
 		setArticelData(article?.detailsData);
-	});
+	}, [article]);
 
 	const [isMoreDescription, setisMoreDescription] = useState(false);
 	return (
 		<ScrollView
+			onScroll={e => {
+				onChildrenScroll(e.nativeEvent.contentOffset.y);
+			}}
+			scrollEventThrottle={16}
 			bounces={false}
 			showsVerticalScrollIndicator={false}
 			style={{ backgroundColor: 'white' }}

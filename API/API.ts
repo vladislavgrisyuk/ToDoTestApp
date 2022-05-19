@@ -110,9 +110,11 @@ const getArticleData = async (url: string) => {
 						v.name.trim().toLowerCase() != 'теги'
 					);
 				}),
-				type: $('.entry-title')[0]?.childNodes[0]?.nodeValue.split(
-					'\n'
-				)[1],
+				type: tempDetailsData
+					.filter(v => {
+						return v.name.trim().toLowerCase() == 'рейтинг';
+					})[0]
+					?.value.toString(),
 				genres: $('.info-list__row a')
 					.map(function (this: any) {
 						return {
@@ -121,7 +123,11 @@ const getArticleData = async (url: string) => {
 						};
 					})
 					.toArray(),
-				year: $('div.post-info span').eq(9).text().split(' ')[1],
+				year: tempDetailsData
+					.filter(v => {
+						return v.name.trim().toLowerCase() == 'дата релиза';
+					})[0]
+					?.value.toString(),
 				description: $('.info-desc__content').text().trim(),
 				chapterList: $('.chapters-list .chapter-item')
 					.map(function (this: any) {
